@@ -1,9 +1,9 @@
-# TWLoader
+# TWLoader [![Build Status](https://travis-ci.org/Jolty95/TWLoader.svg?branch=3dsx)](https://travis-ci.org/Jolty95/TWLoader)
 TWLoader is a CTR-mode frontend for nds-bootstrap that looks like the Nintendo DSi Menu.
 
 # Usage / FAQ
 
-**Please, read the _wiki_ before asking a question** [Wiki](https://github.com/Robz8/TWLoader/wiki)
+**Please, read the _[wiki](https://github.com/Robz8/TWLoader/wiki)_ before asking a question**
 
 # Building
 
