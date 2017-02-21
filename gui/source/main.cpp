@@ -43,9 +43,8 @@ using std::wstring;
 #include "keyboard.h"
 #define CONFIG_3D_SLIDERSTATE (*(float *)0x1FF81080)
 
-bool is3DSX = COMPILE_3DSX;
+bool is3DSX = true;
 
-#include "logo_png.h"
 #include "logo_demo_png.h"
 
 static touchPosition touch;
@@ -1236,10 +1235,7 @@ int main()
 	sf2d_set_clear_color(RGBA8(0x00, 0x00, 0x00, 0x00));
 	sf2d_set_3D(0);
 
-	if(is3DSX)
-		settingslogotex = sfil_load_PNG_buffer(logo_demo_png, SF2D_PLACE_RAM); // TWLoader (3DSX demo version) logo on top screen
-	else
-		settingslogotex = sfil_load_PNG_buffer(logo_png, SF2D_PLACE_RAM); // TWLoader logo on top screen
+	settingslogotex = sfil_load_PNG_buffer(logo_demo_png, SF2D_PLACE_RAM); // TWLoader (3DSX demo version) logo on top screen	
 
 	sf2d_start_frame(GFX_TOP, GFX_LEFT);
 	sf2d_draw_texture(settingslogotex, 400/2 - settingslogotex->width/2, 240/2 - settingslogotex->height/2);
