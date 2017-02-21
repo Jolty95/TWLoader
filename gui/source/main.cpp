@@ -39,7 +39,6 @@ using std::wstring;
 #include "sound.h"
 #include "inifile.h"
 #include "date.h"
-#include "log.h"
 #include "keyboard.h"
 #define CONFIG_3D_SLIDERSTATE (*(float *)0x1FF81080)
 
@@ -221,8 +220,6 @@ static const char fcboxartfolder[] = "sdmc:/_nds/twloader/boxart/flashcard";
 	
 bool keepsdvalue = false;
 int gbarunnervalue = 0;
-
-bool logEnabled = false;
 
 static std::string ReplaceAll(std::string str, const std::string& from, const std::string& to) {
     size_t start_pos = 0;
@@ -504,7 +501,6 @@ static int RainbowLED(void) {
 		return -1;
 	ptmsysmSetInfoLedPattern(&pat);
 	ptmsysmExit();
-	if (logEnabled)	LogFM("Main.RainbowLED", "Rainbow LED is on");
 	return 0;
 }
 
@@ -647,7 +643,6 @@ static void LoadBootstrapConfig(void)
 			settings.twl.console = 0;
 			break;
 	}
-	if (logEnabled)	LogFM("Main.LoadBootstrapConfig", "Bootstrap configuration loaded successfully");
 }
 
 /**
@@ -724,8 +719,6 @@ static void LoadPerGameSettings(void)
 	if(RGB[0] > 255) RGB[0] = 255;
 	if(RGB[1] > 255) RGB[1] = 255;
 	if(RGB[2] > 255) RGB[2] = 255;
-	
-	if (logEnabled)	LogFM("Main.LoadPerGameSettings", "Per-game settings loaded successfully");
 }
 
 /**
@@ -751,7 +744,6 @@ static void SavePerGameSettings(void)
 	gamesettingsini.SetInt("GAME-SETTINGS", "LED_GREEN", settings.pergame.green);
 	gamesettingsini.SetInt("GAME-SETTINGS", "LED_BLUE", settings.pergame.blue);
 	gamesettingsini.SaveIniFile(path);
-	if (logEnabled)	LogFM("Main.SavePerGameSettings", "Per-game settings saved successfully");
 }
 
 /**
@@ -984,14 +976,12 @@ static void loadSlot1BoxArt(void)
 		}
 		char path[256];
 		// example: ASME.png
-		if (logEnabled)	LogFMA("Main", "Loading Slot-1 box art", gameID);
 		snprintf(path, sizeof(path), "%s/%.4s.png", boxartfolder, gameID);
 		if (access(path, F_OK) != -1) {
 			new_tex = sfil_load_PNG_file(path, SF2D_PLACE_RAM);
 		} else {
 			new_tex = sfil_load_PNG_file("romfs:/graphics/boxart_unknown.png", SF2D_PLACE_RAM);
 		}
-		if (logEnabled)	LogFMA("Main", "Done loading Slot-1 box art", gameID);
 	} else {
 		// No cartridge, or unrecognized cartridge.
 		new_tex = sfil_load_PNG_file("romfs:/graphics/boxart_null.png", SF2D_PLACE_RAM);
@@ -1261,13 +1251,6 @@ int main()
 	// Register a handler for "returned from HOME Menu".
 	aptHook(&rfhm_cookie, rfhm_callback, &bannertextloaded);
 	
-	/* Log file is dissabled by default. If _nds/twloader/log exist, we turn log file on, else, log is dissabled */
-	struct stat logBuf;
-	logEnabled = stat("sdmc:/_nds/twloader/log", &logBuf) == 0;
-	/* Log configuration file end */
-	
-	if (logEnabled)	createLog();
-
 	// make folders if they don't exist
 	mkdir("sdmc:/_nds", 0777);
 	mkdir("sdmc:/_nds/twloader", 0777);
@@ -1278,26 +1261,17 @@ int main()
 	mkdir("sdmc:/_nds/twloader/gamesettings/flashcard", 0777);
 	mkdir("sdmc:/_nds/twloader/loadflashcard", 0777);
 	//mkdir("sdmc:/_nds/twloader/tmp", 0777);
-	if (logEnabled)	LogFM("Main.Directories", "Directories are made, or already made");
 	
 	// Font loading
 	sftd_init();
-	if (logEnabled)	LogFM("Main.sftd_init", "sftd inited");
 	font = sftd_load_font_file("romfs:/fonts/FOT-RodinBokutoh Pro M.otf");
-	if (logEnabled)	LogFMA("Main.Font loading", "Font file loaded correctly", "font = FOT-RodinBokutoh Pro M.otf");
 	font_b = sftd_load_font_file("romfs:/fonts/FOT-RodinBokutoh Pro DB.otf");
-	if (logEnabled)	LogFMA("Main.Font loading", "Font file loaded correctly", "font_b = FOT-RodinBokutoh Pro DB.otf");
 	sftd_draw_text(font, 0, 0, RGBA8(0, 0, 0, 255), 16, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890&:-.'!?()\"end"); //Hack to avoid blurry text!
-	if (logEnabled)	LogFMA("Main.Font loading", "Removed pixelation of text", "font");
 	sftd_draw_text(font_b, 0, 0, RGBA8(0, 0, 0, 255), 24, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890&:-.'!?()\"end"); //Hack to avoid blurry text!	
-	if (logEnabled)	LogFMA("Main.Font loading", "Removed pixelation of text", "font_b");
-	
     snprintf(settings_vertext, 14, "Ver. %d.%d.%d   ", VERSION_MAJOR, VERSION_MINOR, VERSION_MICRO);
-	if (logEnabled)	LogFMA("Main.GUI version", "Successful reading version", settings_vertext);
 
 	LoadSettings();	
 	bootstrapPath = settings.twl.bootstrapfile ? "fat:/_nds/release-bootstrap.nds" : "fat:/_nds/unofficial-bootstrap.nds";
-	if (logEnabled) LogFMA("Main.bootstrapPath", "Using path:", bootstrapPath.c_str());
 	LoadBootstrapConfig();
 
 	// Store bootstrap version
@@ -1361,25 +1335,16 @@ int main()
 	sf2d_texture *bracetex = sfil_load_PNG_file("romfs:/graphics/brace.png", SF2D_PLACE_RAM); // Brace (C-shaped thingy)
 	sf2d_texture *bubbletex = sfil_load_PNG_file("romfs:/graphics/bubble.png", SF2D_PLACE_RAM); // Text bubble
 
-	if (logEnabled)	LogFM("Main.sf2d_textures", "Textures load successfully");
-
 	dspfirmfound = false;
  	if( access( "sdmc:/3ds/dspfirm.cdc", F_OK ) != -1 ) {
 		ndspInit();
 		dspfirmfound = true;
-		if (logEnabled)	LogFM("Main.dspfirm", "DSP Firm found!");
-	}else{
-		if (logEnabled)	LogFM("Main.dspfirm", "DSP Firm not found");
 	}
 
 	bool musicbool = false;
 	if( access( "sdmc:/_nds/twloader/music.wav", F_OK ) != -1 ) {
 		musicpath = "sdmc:/_nds/twloader/music.wav";
-		if (logEnabled)	LogFM("Main.music", "Custom music file found!");
-	}else {
-		if (logEnabled)	LogFM("Main.dspfirm", "No music file found");
 	}
-
 	// Load the sound effects if DSP is available.
 	if (dspfirmfound) {
 		bgm_menu = new sound(musicpath);
@@ -1397,11 +1362,9 @@ int main()
 
 	char romsel_counter2sd[16];	// Number of ROMs on the SD card.
 	snprintf(romsel_counter2sd, sizeof(romsel_counter2sd), "%zu", files.size());
-	if (logEnabled)	LogFMA("Main. ROM scanning", "Number of ROMs on the SD card detected", romsel_counter2sd);
 	
 	char romsel_counter2fc[16];	// Number of ROMs on the flash card.
 	snprintf(romsel_counter2fc, sizeof(romsel_counter2fc), "%zu", fcfiles.size());
-	if (logEnabled)	LogFMA("Main. ROM scanning", "Number of ROMs on the flashcard detected", romsel_counter2fc);
 	
 	// Download box art
 	if (checkWifiStatus()) {
@@ -1410,7 +1373,6 @@ int main()
 
 	// Cache banner data for ROMs on the SD card.
 	// TODO: Re-cache if it's 0 bytes?
-	if (logEnabled)	Log("********************************************************\n");
 	for (bnriconnum = 0; bnriconnum < (int)files.size(); bnriconnum++) {
 		static const char title[] = "Now checking banner data (SD Card)...";
 		char romsel_counter1[16];
@@ -1425,19 +1387,13 @@ int main()
 		FILE *f_nds_file = fopen(nds_path, "rb");
 		if (!f_nds_file)
 			continue;
-		if (logEnabled)	LogFMA("Main. Banner scanning", "Trying to read banner from file", nds_path);
 		
-		if(cacheBanner(f_nds_file, tempfile, font, dialogboxtex, title, romsel_counter1, romsel_counter2sd) == 0) {
-			if (logEnabled)	LogFM("Main. Banner scanning", "Done!");
-		}else {
-			if (logEnabled)	LogFM("Main. Banner scanning", "Error!");
-		}
+		cacheBanner(f_nds_file, tempfile, font, dialogboxtex, title, romsel_counter1, romsel_counter2sd);
 		
 		fclose(f_nds_file);
 	}
 
-	if (checkWifiStatus()) {
-		
+	if (checkWifiStatus()) {		
 		switch (settings.ui.autoupdate) {
 			case 2:
 				UpdateBootstrapUnofficial();
@@ -2274,7 +2230,6 @@ int main()
 						menu_ctrlset = CTRL_SET_GAMESEL;
 					}
 				} else if (gbarunnervalue == 1) {
-					if (logEnabled)	LogFM("Main", "Switching to NTR/TWL-mode");
 					applaunchon = true;
 				}
 			}
@@ -2457,7 +2412,6 @@ int main()
 					screenmodeswitch = false;
 					applaunchprep = false;
 				} else {
-					if (logEnabled)	LogFM("Main.applaunchprep", "Switching to NTR/TWL-mode");
 					applaunchon = true;
 				}
 			}
@@ -3621,7 +3575,6 @@ int main()
 								}
 								
 								std::string gameName = keyboardInput(TR(STR_START_SEARCH_HINT));
-								if (logEnabled)	LogFMA("Main.search","Text written", gameName.c_str());
 								
 								if(!settings.twl.forwarder){
 									// SD CARD
@@ -3714,7 +3667,6 @@ int main()
 									}
 									
 									std::string gameName = keyboardInput(TR(STR_START_SEARCH_HINT));
-									if (logEnabled)	LogFMA("Main.search","Text written", gameName.c_str());
 									
 									for (auto iter = files.cbegin(); iter != files.cend(); ++iter) {
 										if (iter->size() < gameName.size()) {
@@ -4176,7 +4128,6 @@ int main()
 
 	// Unregister the "returned from HOME Menu" handler.
 	aptUnhook(&rfhm_cookie);
-	if (logEnabled) LogFM("Main", "returned from HOME Menu handler unregistered");
 
 	if (saveOnExit) {
 		// Save settings.
@@ -4184,14 +4135,11 @@ int main()
 		SetPerGameSettings();
 		SaveBootstrapConfig();
 	}
-	if (logEnabled) LogFM("Main.saveOnExit", "Settings are saved");
 
 	// Unload settings screen textures.
 	settingsUnloadTextures();
-	if (logEnabled) LogFM("Main.settingsUnloadTextures", "Settings textures unloaded");
 
 	if (colortexloaded) sf2d_free_texture(topbgtex);
-	if (logEnabled) LogFM("Main", "topbgtex freed");
 	sf2d_free_texture(toptex);
 	for (int i = 0; i < 6; i++) {
 		sf2d_free_texture(voltex[i]);
@@ -4199,14 +4147,12 @@ int main()
 
 	sf2d_free_texture(shoulderLtex);
 	sf2d_free_texture(shoulderRtex);
-	if (logEnabled) LogFM("Main", "Shoulder textures freed");
 
 	if (settings.ui.theme == 0) {
 		sf2d_free_texture(batterychrgtex);
 		for (int i = 0; i < 6; i++) {
 			sf2d_free_texture(batterytex[i]);
 		}
-		if (logEnabled) LogFM("Main", "DSi Menu battery textures freed");
 	}
 	if (settings.ui.theme == 1) sf2d_free_texture(iconstex);
 	if (colortexloaded) sf2d_free_texture(bottomtex);
@@ -4269,7 +4215,6 @@ int main()
 
 	sftd_free_font(font);
 	sftd_free_font(font_b);
-	if (logEnabled) LogFM("Main", "Fonts freed");
 	sftd_fini();
 	sf2d_fini();
 
@@ -4283,6 +4228,5 @@ int main()
 	amExit();
 	cfguExit();
 	aptExit();
-	if (logEnabled) LogFM("Main", "All services are closed and returned to HOME Menu");
 	return 0;
 }

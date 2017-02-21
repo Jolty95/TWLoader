@@ -4,7 +4,6 @@
 #include "date.h"
 #include "sound.h"
 #include "download.h"
-#include "log.h"
 #include "language.h"
 #include "textfns.h"
 #include "inifile.h"
@@ -1245,7 +1244,6 @@ void LoadColor(void) {
 	if (settings.ui.color < 0 || settings.ui.color > 18)
 		settings.ui.color = 0;
 	color_data = &colors[settings.ui.color];
-	if (logEnabled)	LogFM("LoadColor()", "Colors load successfully");
 }
 
 /**
@@ -1275,7 +1273,6 @@ void LoadMenuColor(void) {
 	if (settings.ui.menucolor < 0 || settings.ui.menucolor > 16)
 		settings.ui.menucolor = 0;
 	menucolor = menu_colors[settings.ui.menucolor];
-	if (logEnabled)	LogFM("LoadMenuColor()", "Menu color load successfully");
 }
 
 /**
@@ -1287,10 +1284,8 @@ void LoadBottomImage() {
 	if (settings.ui.custombot == 1) {
 		if( access( "sdmc:/_nds/twloader/bottom.png", F_OK ) != -1 ) {
 			bottomloc = "sdmc:/_nds/twloader/bottom.png";
-			if (logEnabled)	LogFM("LoadBottomImage()", "Using custom bottom image. Method load successfully");
 		} else {
 			bottomloc = "romfs:/graphics/bottom.png";
-			if (logEnabled)	LogFM("LoadBottomImage()", "Using default bottom image. Method load successfully");
 		}
 	}
 }
@@ -1358,7 +1353,6 @@ void LoadSettings(void) {
 			settings.twl.console = 0;
 			break;
 	}
-	if (logEnabled)	LogFM("Settings.LoadSettings", "Settings loaded successfully");
 }
 
 /**

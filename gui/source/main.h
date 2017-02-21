@@ -11,7 +11,6 @@
 #include <string>
 #include <vector>
 
-extern bool is3DSX;	// Is the program running as 3DSX?
 extern bool run;	// Set to false to exit to the Home Menu.
 
 // Fonts
@@ -63,9 +62,6 @@ extern ScreenMode screenmode;
 // Files
 extern std::vector<std::string> files;
 extern std::vector<std::string> fcfiles;
-
-// Logging
-extern bool logEnabled;
 
 // Sound effects
 extern bool dspfirmfound;

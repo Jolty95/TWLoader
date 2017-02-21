@@ -3,7 +3,6 @@
 #include "language.h"
 #include "date.h"
 #include "inifile.h"
-#include "log.h"
 #include "ndsheaderbanner.h"
 #include "settings.h"
 #include "gamecard.h"
@@ -42,10 +41,7 @@ bool checkWifiStatus(void) {
 	bool res = false;
 
 	if (R_SUCCEEDED(ACU_GetWifiStatus(&wifiStatus)) && wifiStatus) {
-		if (logEnabled)	LogFMA("WifiStatus", "Active internet connection found", RetTime(true).c_str());
 		res = true;
-	} else {
-		if (logEnabled)	LogFMA("WifiStatus", "No Internet connection found!", RetTime(true).c_str());
 	}
 
 	return res;
@@ -89,7 +85,6 @@ int downloadFile(const char* url, const char* file, MediaType mediaType) {
 			if(R_SUCCEEDED(httpcBeginRequest(&context))){
 				u32 contentsize=0;
 				if(R_FAILED(httpcGetResponseStatusCode(&context, &statuscode))){
-					if (logEnabled) LogFM("downloadFile.error", "An error has ocurred trying to get response status code");
 					httpcCloseContext(&context);
 					httpcExit();
 					fsExit();
@@ -104,7 +99,6 @@ int downloadFile(const char* url, const char* file, MediaType mediaType) {
 					FSUSER_OpenFileDirectly(&fileHandle, ARCHIVE_SDMC, fsMakePath(PATH_EMPTY, ""), filePath, FS_OPEN_CREATE | FS_OPEN_WRITE, 0x00000000);
 
 					if(R_FAILED(httpcGetDownloadSizeState(&context, NULL, &contentsize))){
-						if (logEnabled) LogFM("downloadFile.error", "An error has ocurred trying to get download size");
 						httpcCloseContext(&context);
 						httpcExit();
 						fsExit();
@@ -116,7 +110,6 @@ int downloadFile(const char* url, const char* file, MediaType mediaType) {
 					do {
 						if(R_FAILED(ret = httpcDownloadData(&context, buf, contentsize, &readSize))){
 							// In case there is an error
-							if (logEnabled) LogFM("downloadFile.error", "An error has ocurred while downloading data");
 							free(buf);
 							httpcCloseContext(&context);
 							httpcExit();
@@ -155,7 +148,6 @@ int downloadFile(const char* url, const char* file, MediaType mediaType) {
 				}
 			}else{
 				// There was an error begining the request
-				if (logEnabled) LogFM("downloadFile.error", "An error has ocurred trying to request server");
 				httpcCloseContext(&context);
 				httpcExit();
 				fsExit();
@@ -163,7 +155,6 @@ int downloadFile(const char* url, const char* file, MediaType mediaType) {
 			}
 		}else{
 			// There was a problem opening HTTP context
-			if (logEnabled) LogFM("downloadFile.error", "An error has ocurred trying to open HTTP context");
 			httpcCloseContext(&context);
 			httpcExit();
 			fsExit();
@@ -182,7 +173,6 @@ int downloadFile(const char* url, const char* file, MediaType mediaType) {
  * @return 0 if an update is available; non-zero if up to date or an error occurred.
  */
 int checkUpdate(void) {
-	if (logEnabled)	LogFM("checkUpdate", "Checking updates...");
 	static const char title[] = "Now checking TWLoader version...";
 	DialogBoxAppear(title, 0);
 	sf2d_start_frame(GFX_BOTTOM, GFX_LEFT);
@@ -195,7 +185,6 @@ int checkUpdate(void) {
 	sf2d_swapbuffers();
 	remove("sdmc:/_nds/twloader/ver");
 	int res = downloadFile(DOWNLOAD_VER_URL, "/_nds/twloader/ver", MEDIA_SD_FILE);
-	if (logEnabled)	LogFM("checkUpdate", "downloadFile() end");
 	if (res == 0) {
 
 		bool isUnknown = false;
@@ -225,8 +214,6 @@ int checkUpdate(void) {
 			strcpy(settings_latestvertext, "Unknown");
 			isUnknown = true;
 		}
-		if (logEnabled)	LogFMA("checkUpdate", "Reading downloaded version:", settings_latestvertext);
-		if (logEnabled)	LogFMA("checkUpdate", "Reading GUI version:", settings_vertext);
 
 		sf2d_start_frame(GFX_BOTTOM, GFX_LEFT);
 		if (screenmode == SCREEN_MODE_SETTINGS) {
@@ -235,7 +222,6 @@ int checkUpdate(void) {
 		sf2d_draw_texture(dialogboxtex, 0, 0);
 		if (!isUnknown && !strcmp(settings_latestvertext, settings_vertext)) {
 			// Version is not different.
-			if (logEnabled)	LogFMA("checkUpdate", "Comparing...", "Are equals");
 		
 			if (screenmode == SCREEN_MODE_SETTINGS) {				
 				showdialogbox = false;
@@ -244,14 +230,11 @@ int checkUpdate(void) {
 				sf2d_swapbuffers();
 			}
 			
-			if (logEnabled)	LogFM("checkUpdate", "TWLoader is up-to-date!");			
 			return -1;
 		}
-		if (logEnabled)	LogFMA("checkUpdate", "Comparing...", "NO equals");
 		showdialogbox = false;
 		return 0;
 	}
-	if (logEnabled)	LogFM("checkUpdate", "Problem downloading ver file!");
 	showdialogbox = false;
 	return -1;
 }
@@ -487,7 +470,6 @@ static int downloadBoxArt_internal(const char *ba_TID)
 {
 	char path[256];
 	char http_url[256];
-	if (logEnabled)	LogFMA("downloadBoxArt_internal", "Downloading boxart for TID", ba_TID);
 
 	const char *ba_region_fallback = NULL;
 	const char *ba_region = getGameTDBRegion(ba_TID[3], &ba_region_fallback);
@@ -535,7 +517,6 @@ void checkBootstrapVersion(void){
 	bool res = false;
 	long fileSize;
 	char buf[26];
-	if (logEnabled) LogFM("download.checkBootstrapVersion()", "Checking bootstrap version");
 	// Clean buf array
 	for (size_t i=0; i< sizeof(buf); i++){
 		buf[i] = '\0';
@@ -543,12 +524,9 @@ void checkBootstrapVersion(void){
 	
 	FILE* VerFile = fopen("sdmc:/_nds/twloader/release-bootstrap", "r");
 	if (!VerFile){
-		if (logEnabled) LogFM("download.checkBootstrapVersion()", "release-bootstrap ver file not found.");
 		if(checkWifiStatus()){
-			if (logEnabled) LogFM("download.checkBootstrapVersion()", "downloading release-bootstrap ver file.");
 			res = downloadBootstrapVersion(true); // true == release
 		}else{
-			if (logEnabled) LogFM("download.checkBootstrapVersion()", "No release version file available.");
 			settings_releasebootstrapver = "No version available";
 		}
 	}else{
@@ -559,7 +537,6 @@ void checkBootstrapVersion(void){
 		buf[fileSize - 1] = '\0';
 		settings_releasebootstrapver = buf;
 		fclose(VerFile);
-		if (logEnabled) LogFMA("download.checkBootstrapVersion()", "Reading release bootstrap ver file:", settings_releasebootstrapver.c_str());
 	}
 	
 	if (res == -1) settings_releasebootstrapver = "No version available";
@@ -572,11 +549,9 @@ void checkBootstrapVersion(void){
 	}
 	
 	if(res == 0){
-		if (logEnabled) LogFM("download.checkBootstrapVersion()", "Re-opening release bootstrap ver file.");
 		// Try to open again
 		VerFile = fopen("sdmc:/_nds/twloader/release-bootstrap", "r");
 		if (!VerFile){
-				if (logEnabled) LogFM("download.checkBootstrapVersion()", "No release version file available #2.");
 				settings_releasebootstrapver = "No version available";
 		}else{
 			fseek(VerFile , 0 , SEEK_END);
@@ -586,7 +561,6 @@ void checkBootstrapVersion(void){
 			buf[fileSize - 1] = '\0';
 			settings_releasebootstrapver = buf;
 			fclose(VerFile);
-			if (logEnabled) LogFMA("download.checkBootstrapVersion()", "Reading release bootstrap ver file #2:", settings_releasebootstrapver.c_str());
 		}
 	}
 	
@@ -594,12 +568,9 @@ void checkBootstrapVersion(void){
 	
 	VerFile = fopen("sdmc:/_nds/twloader/unofficial-bootstrap", "r");
 	if (!VerFile){
-		if (logEnabled) LogFM("download.checkBootstrapVersion()", "unofficial-bootstrap ver file not found.");
 		if(checkWifiStatus()){
-			if (logEnabled) LogFM("download.checkBootstrapVersion()", "downloading unofficial-bootstrap ver file.");
 			res = downloadBootstrapVersion(false); // false == unofficial
 		}else{
-			if (logEnabled) LogFM("download.checkBootstrapVersion()", "No unofficial version file available.");
 			settings_unofficialbootstrapver = "No version available";
 		}
 	}else{
@@ -610,18 +581,15 @@ void checkBootstrapVersion(void){
 		buf[fileSize - 1] = '\0';
 		settings_unofficialbootstrapver = buf;
 		fclose(VerFile);
-		if (logEnabled) LogFMA("download.checkBootstrapVersion()", "Reading unofficial bootstrap ver file:", settings_unofficialbootstrapver.c_str());
 	}
 	if (res == -1) settings_unofficialbootstrapver = "No version available";
 
 	fclose(VerFile);
 	
 	if(res == 0){
-		if (logEnabled) LogFM("download.checkBootstrapVersion()", "Re-opening unofficial bootstrap ver file.");
 		// Try to open again
 		VerFile = fopen("sdmc:/_nds/twloader/unofficial-bootstrap", "r");
 		if (!VerFile){
-				if (logEnabled) LogFM("download.checkBootstrapVersion()", "No unofficial version file available #2.");		
 				settings_unofficialbootstrapver = "No version available";
 		}else{
 			fseek(VerFile , 0 , SEEK_END);
@@ -631,7 +599,6 @@ void checkBootstrapVersion(void){
 			buf[fileSize - 1] = '\0';
 			settings_unofficialbootstrapver = buf;
 			fclose(VerFile);
-			if (logEnabled) LogFMA("download.checkBootstrapVersion()", "Reading unofficial bootstrap ver file #2:", settings_unofficialbootstrapver.c_str());
 		}
 	}
 }
@@ -641,8 +608,7 @@ void checkBootstrapVersion(void){
  */
 void downloadSlot1BoxArt(const char* TID)
 {
-	if (logEnabled)	LogFM("Main.downloadSlot1BoxArt", "Checking box art (Slot-1 card).");
-	
+
 	char ba_TID[5];
 	snprintf(ba_TID, sizeof(ba_TID), "%.4s", TID);
 	ba_TID[4] = 0;
@@ -654,7 +620,6 @@ void downloadSlot1BoxArt(const char* TID)
 		return;
 	}
 
-	if (logEnabled)	LogFM("Main.downloadSlot1BoxArt", "Downloading box art (Slot-1 card)");
 	downloadBoxArt_internal(ba_TID);
 }
 
@@ -670,7 +635,6 @@ void downloadBoxArt(void)
 	vector<u32> boxart_dl_tids;	// Title IDs of boxart to download.
 	boxart_all_tids.reserve(files.size() + fcfiles.size());
 	boxart_dl_tids.reserve(files.size() + fcfiles.size());
-	if (logEnabled)	LogFM("Download.downloadBoxArt", "Checking missing boxart on SD card...");
 
 	// Check if we're missing any boxart for ROMs on the SD card.
 	for (size_t boxartnum = 0; boxartnum < files.size(); boxartnum++) {
@@ -681,7 +645,6 @@ void downloadBoxArt(void)
 		if (!f_nds_file)
 			continue;
 		
-		if (logEnabled)	LogFMA("DownloadBoxArt.SD CARD", "Path: ", path);
 		char ba_TID[5];
 		grabTID(f_nds_file, ba_TID);
 		ba_TID[4] = 0;
@@ -735,7 +698,6 @@ void downloadBoxArt(void)
 			continue;
 		}
 		
-		if (logEnabled)	LogFMA("DownloadBoxArt.FLASHCARD", "TID: ", ba_TID.c_str());		
 		// Did we already check for this boxart?
 		// NOTE: Storing byteswapped in order to sort correctly.
 		u32 tid;
@@ -793,10 +755,8 @@ void downloadBoxArt(void)
 		}
 	}
 	
-	if (logEnabled)	LogFM("DownloadBoxArt.Read_BoxArt", "Boxart read correctly.");
 	if (boxart_dl_tids.empty()) {
 		// No boxart to download.
-		if (logEnabled)	LogFM("Download.downloadBoxArt", "No boxart to download.");
 		return;
 	}
 
@@ -806,7 +766,6 @@ void downloadBoxArt(void)
 	// Download the boxart.
 	char s_boxart_total[12];
 	snprintf(s_boxart_total, sizeof(s_boxart_total), "%zu", boxart_dl_tids.size());
-	if (logEnabled)	LogFM("DownloadBoxArt.downloading_process", "Downloading missing boxart");
 	for (size_t boxartnum = 0; boxartnum < boxart_dl_tids.size(); boxartnum++) {
 		static const char title[] = "Downloading missing boxart...";
 
