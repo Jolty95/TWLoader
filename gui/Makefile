@@ -17,12 +17,6 @@ MAKEROM 	?= makerom
 BANNERTOOL 	?= bannertool
 
 #---------------------------------------------------------------------------------
-# 3DSX
-#---------------------------------------------------------------------------------
-
-COMPILE_3DSX  = 0
-
-#---------------------------------------------------------------------------------
 # Generate version number
 #---------------------------------------------------------------------------------
 
@@ -72,7 +66,7 @@ RSF_FILE	:=	app/build-cia.rsf
 #---------------------------------------------------------------------------------
 ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
-CFLAGS	:=	-g -Wall -O2 -DCOMPILE_3DSX=$(COMPILE_3DSX) -DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) -mword-relocations \
+CFLAGS	:=	-g -Wall -O2 -DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) -mword-relocations \
 		-ffunction-sections \
 		$(ARCH)
 
@@ -172,12 +166,7 @@ $(BUILD):
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(TARGET).3dsx $(TARGET).cia $(TARGET).elf
-
-
-#---------------------------------------------------------------------------------
-cia: $(BUILD)
-	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile cia
+	@rm -fr $(BUILD) $(TARGET).3dsx $(TARGET).elf
 
 #---------------------------------------------------------------------------------
 3dsx: $(BUILD)
@@ -191,14 +180,10 @@ DEPENDS	:=	$(OFILES:.o=.d)
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-all: $(OUTPUT).cia $(OUTPUT).elf $(OUTPUT).3dsx
-cia: $(OUTPUT).elf $(OUTPUT).cia
+all: $(OUTPUT).elf $(OUTPUT).3dsx
 3dsx: $(OUTPUT).elf $(OUTPUT).3dsx
 
 $(OUTPUT).elf	:	$(OFILES)
-
-$(OUTPUT).cia	:	$(OUTPUT).elf
-	$(MAKEROM) -f cia -target t -exefslogo -o "../TWLoader.cia" -elf "../TWLoader.elf" -rsf "../app/build-cia.rsf" -banner "../app/banner.bin" -icon "../app/icon.bin" -logo "../app/twlv2-padded.lz11" -DAPP_ROMFS="$(TOPDIR)/$(ROMFS)" -major $(VERSION_MAJOR) -minor $(VERSION_MINOR) -micro $(VERSION_MICRO) -DAPP_VERSION_MAJOR="$(VERSION_MAJOR)"
 
 #---------------------------------------------------------------------------------
 # you need a rule like this for each extension you use as binary data

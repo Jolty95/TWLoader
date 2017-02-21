@@ -47,11 +47,11 @@ install:
   - make && sudo make install
   - cd ..  
 script:
-  - "Starting compilation"
+  - echo "Starting compilation"
   - cd gui
-  - "Compiling 3DSX version"
-  - make COMPILE_3DSX=1 3dsx
-  - "Finish"
+  - echo "Compiling 3DSX version"
+  - make 3dsx
+  - echo "Finish"
 addons:
   apt:
     sources:
