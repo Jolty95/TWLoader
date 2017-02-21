@@ -1490,6 +1490,9 @@ int main()
 	int wood_ndsiconscalemovepos = 0;
 	float wood_ndsiconscalesize = 0.00f;
 	bool wood_ndsiconscaledown = false;
+
+	int startbordermovepos = 0;
+	float startborderscalesize = 1.0f;
 	
 	if (settings.ui.theme >= 1)
 		menu_ctrlset = CTRL_SET_MENU;
@@ -2301,6 +2304,8 @@ int main()
 			} else if (titleboxXmovetimer == 8) {
 				titleboxXmovepos += 8;
 				boxartXmovepos += 18;
+				startbordermovepos = 1;
+				startborderscalesize = 0.97;
 				cursorPositionset = false;
 			} else if (titleboxXmovetimer == 2) {
 				titleboxXmovepos += 8;
@@ -2401,6 +2406,8 @@ int main()
 			} else if (titleboxXmovetimer == 8) {
 				titleboxXmovepos -= 8;
 				boxartXmovepos -= 18;
+				startbordermovepos = 1;
+				startborderscalesize = 0.97;
 				cursorPositionset = false;
 			} else if (titleboxXmovetimer == 2) {
 				titleboxXmovepos -= 8;
@@ -3055,7 +3062,16 @@ int main()
 					} else {
 						sf2d_draw_texture_scale(bracetex, 15+ndsiconXpos+titleboxXmovepos, 116, -1, 1);
 					}
-					if (applaunchprep) {
+					if (!applaunchprep) {
+						if (titleboxXmovetimer == 0) {
+							startbordermovepos = 0;
+							startborderscalesize = 1.0;
+						}
+						if (!settings.twl.forwarder && cursorPosition == -1 && !gamecardIsInserted()) {
+							// Slot-1 selected, but no cartridge is present.
+							// Don't print "START" and the cursor border.
+						}
+					} else {
 						if (settings.ui.custombot)
 							sf2d_draw_texture_part(bottomtex, 128, 116, 128, 116, 64, 80);
 						else
@@ -3310,6 +3326,8 @@ int main()
 					}
 				}
 			} else {
+				startbordermovepos = 0;
+				startborderscalesize = 1.0;
 				if (!noromsfound && file_count == 0) {
 					// No ROMs were found.
 					cursorPosition = -1;
