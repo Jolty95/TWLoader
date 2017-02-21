@@ -232,7 +232,6 @@ void settingsDrawTopScreen(void)
 			if (subscreenmode == SUBSCREEN_MODE_FRONTEND) {
 				sftd_draw_wtext(font, offset3D[topfb].disabled+72, 166, RGBA8(0, 0, 255, 255), 14, TR(STR_SETTINGS_XBUTTON_RELEASE));
 				sftd_draw_wtext(font, offset3D[topfb].disabled+72, 180, RGBA8(0, 255, 0, 255), 14, TR(STR_SETTINGS_YBUTTON_UNOFFICIAL));
-				if(!is3DSX) sftd_draw_wtext(font, offset3D[topfb].disabled+72, 194, RGBA8(255, 255, 255, 255), 14, TR(STR_SETTINGS_SETTINGS_START_UPDATE_TWLOADER));
 			}
 		}
 
@@ -268,13 +267,6 @@ void settingsDrawBottomScreen(void)
 
 	sf2d_start_frame(GFX_BOTTOM, GFX_LEFT);
 	sf2d_draw_texture(settingstex, 0, 0);
-	if(!is3DSX) {
-		const wchar_t *home_text = TR(STR_RETURN_TO_HOME_MENU);
-		const int home_width = sftd_get_wtext_width(font, 13, home_text) + 16;
-		const int home_x = (320-home_width)/2;
-		sf2d_draw_texture(whomeicontex, home_x, 220); // Draw HOME icon
-		sftd_draw_wtext(font, home_x+16, 221, RGBA8(255, 255, 255, 255), 13, home_text);
-	}
 
 	// X positions.
 	static const int Xpos = 24;
@@ -479,20 +471,7 @@ void settingsDrawBottomScreen(void)
 			sftd_draw_text(font, XposValue, Ypos, RGBA8(255, 255, 255, 255), 12, autoupdatevaluetext);
 			Ypos += 12;
 		}
-		if(!is3DSX) {
-			if (cursor_pos[0] == 8) {
-				sftd_draw_wtext(font, Xpos, Ypos, SET_ALPHA(color_data->color, 255), 12, TR(STR_SETTINGS_AUTOUPDATE_TWLOADER));
-				sftd_draw_text(font, XposValue, Ypos, SET_ALPHA(color_data->color, 255), 12, autodlvaluetext);
-				sftd_draw_wtext(font, 8, 184, RGBA8(255, 255, 255, 255), 13, TR(STR_SETTINGS_DESCRIPTION_AUTOUPDATE_TWLOADER_1));
-				sftd_draw_wtext(font, 8, 198, RGBA8(255, 255, 255, 255), 13, TR(STR_SETTINGS_DESCRIPTION_AUTOUPDATE_TWLOADER_2));
-				Ypos += 12;
-			} else {
-				sftd_draw_wtext(font, Xpos, Ypos, RGBA8(255, 255, 255, 255), 12, TR(STR_SETTINGS_AUTOUPDATE_TWLOADER));
-				sftd_draw_text(font, XposValue, Ypos, RGBA8(255, 255, 255, 255), 12, autodlvaluetext);
-				Ypos += 12;
-			}
-		}
-		if (cursor_pos[0] == 9) {
+		if (cursor_pos[0] == 8) {
 			// Selected			
 			sftd_draw_wtext(font, Xpos, Ypos, SET_ALPHA(color_data->color, 255), 12, L"Rom path");
 			sftd_draw_wtext(font, 8, 184, RGBA8(255, 255, 255, 255), 13, L"Press A to change rom location folder.");
@@ -1037,23 +1016,18 @@ bool settingsMoveCursor(u32 hDown)
 							settings.ui.autoupdate = 2;
 						}
 					}
-					break;
-				case 8:	// Enable or disable autodownload
-					settings.ui.autodl = !settings.ui.autodl;
-					break;
-				case 9: // Rom path
+					break;				
+				case 8: // Rom path
 					if (hDown & KEY_A) {
 						subscreenmode = SUBSCREEN_MODE_CHANGE_ROM_PATH;
 					}
 					break;
 			}
 			sfx = sfx_select;
-		} else if ((hDown & KEY_DOWN) && cursor_pos[0] < 9) {
+		} else if ((hDown & KEY_DOWN) && cursor_pos[0] < 8) {
 			cursor_pos[0]++;
-			if(is3DSX) {
-				if(cursor_pos[0] == 9)
-					cursor_pos[0]--;
-			}
+			if(cursor_pos[0] == 8)
+				cursor_pos[0]--;
 			sfx = sfx_select;
 		} else if ((hDown & KEY_UP) && cursor_pos[0] > 0) {
 			cursor_pos[0]--;
@@ -1084,15 +1058,6 @@ bool settingsMoveCursor(u32 hDown)
 			} else {
 				// Wi-Fi is not connected.
 				sfx = sfx_wrong;
-			}
-		} else if (hDown & KEY_START && checkWifiStatus() && !is3DSX) {
-			if (checkUpdate() == 0) {
-				// Play the sound now instead of waiting.
-				if (dspfirmfound && sfx_select) {
-					sfx_select->stop();	// Prevent freezing
-					sfx_select->play();
-				}
-				DownloadTWLoaderCIAs();
 			}
 		} else if (hDown & KEY_B) {
 			titleboxXmovetimer = 1;

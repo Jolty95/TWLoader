@@ -43,8 +43,6 @@ using std::wstring;
 #include "keyboard.h"
 #define CONFIG_3D_SLIDERSTATE (*(float *)0x1FF81080)
 
-bool is3DSX = true;
-
 #include "logo_demo_png.h"
 
 static touchPosition touch;
@@ -1174,7 +1172,7 @@ static void drawMenuDialogBox(void)
 		} buttons[] = {
 			{ 23,  31, &settings.twl.forwarder, TR(STR_START_GAMELOCATION), {TR(STR_START_SD_CARD), TR(STR_START_FLASHCARD)}},
 			{161,  31, &settings.romselect.toplayout, NULL, {TR(STR_START_BOXART_ON), TR(STR_START_BOXART_OFF)}},
-			{ 23,  71, &is3DSX, TR(STR_START_START_GBARUNNER2), {NULL, NULL}},
+			{ 23,  71, NULL, TR(STR_START_START_GBARUNNER2), {NULL, NULL}},
 			{161,  71, &settings.ui.topborder, NULL, {TR(STR_START_TOP_BORDER_OFF), TR(STR_START_TOP_BORDER_ON)}},
 			{ 23, 111, NULL, TR(STR_START_UNSET_DONOR), {NULL, NULL}},
 			{161, 111, NULL, TR(STR_START_SEARCH), {NULL, NULL}},
@@ -1439,10 +1437,7 @@ int main()
 	}
 
 	if (checkWifiStatus()) {
-		if (settings.ui.autodl && (checkUpdate() == 0) && !is3DSX) {
-			DownloadTWLoaderCIAs();
-		}
-
+		
 		switch (settings.ui.autoupdate) {
 			case 2:
 				UpdateBootstrapUnofficial();
@@ -2979,14 +2974,6 @@ int main()
 						sf2d_draw_texture(bottomlogotex, 320/2 - bottomlogotex->width/2, 40);
 					}
 
-					if(!is3DSX) {
-						const wchar_t *home_text = TR(STR_RETURN_TO_HOME_MENU);
-						const int home_width = sftd_get_wtext_width(font, 13, home_text) + 16;
-						const int home_x = (320-home_width)/2;
-						sf2d_draw_texture(homeicontex, home_x, 220); // Draw HOME icon
-						sftd_draw_wtext(font, home_x+16, 221, RGBA8(0, 0, 0, 255), 13, home_text);
-					}
-
 					if (pagenum == 0) {
 						if (settings.ui.iconsize) {
 							sf2d_draw_texture_scale(bracetex, -74+titleboxXmovepos*1.25, 108, 1.25, 1.25);
@@ -3083,21 +3070,6 @@ int main()
 						if (!settings.twl.forwarder && cursorPosition == -1 && !gamecardIsInserted()) {
 							// Slot-1 selected, but no cartridge is present.
 							// Don't print "START" and the cursor border.
-						} else {
-							if (!is3DSX || cursorPosition == -2) {
-								// Print "START" and the cursor border.
-								if (settings.ui.iconsize) {
-									sf2d_draw_texture_scale(startbordertex, 120+startbordermovepos, 108+startbordermovepos, startborderscalesize+0.25, startborderscalesize+0.25);
-									const wchar_t *start_text = TR(STR_START);
-									const int start_width = sftd_get_wtext_width(font_b, 16, start_text);
-									sftd_draw_wtext(font_b, (320-start_width)/2, 183, RGBA8(255, 255, 255, 255), 16, start_text);
-								} else {
-									sf2d_draw_texture_scale(startbordertex, 128+startbordermovepos, 116+startbordermovepos, startborderscalesize, startborderscalesize);
-									const wchar_t *start_text = TR(STR_START);
-									const int start_width = sftd_get_wtext_width(font_b, 12, start_text);
-									sftd_draw_wtext(font_b, (320-start_width)/2, 177, RGBA8(255, 255, 255, 255), 12, start_text);
-								}
-							}
 						}
 					} else {
 						if (settings.ui.custombot)
@@ -3190,26 +3162,8 @@ int main()
 									bannertextloaded = false;
 								}
 								break;
-							case 2:
-								if (!is3DSX) {
-									settings.twl.launchslot1 = true;
-									settings.twl.forwarder = false;
-									if (logEnabled)	LogFM("Main", "Switching to NTR/TWL-mode");
-									applaunchon = true;
-								}
-								break;
-							case 3:
-								if (!is3DSX) {
-									gbarunnervalue = 1;
-									settings.ui.romfolder = "_nds";									
-									rom = "GBARunner2.nds";
-									if (settings.twl.forwarder)
-										settings.twl.launchslot1 = true;
-									else
-										settings.twl.launchslot1 = false;
-									if (logEnabled)	LogFM("Main", "Switching to NTR/TWL-mode");
-									applaunchon = true;
-								}
+							case 2:								
+							case 3:								
 								break;
 							case 4:
 								sf2d_set_3D(1);
@@ -3240,26 +3194,6 @@ int main()
 						// updatebotscreen = true;
 					}
 					if(hDown & KEY_A){
-						if (!is3DSX) {
-							if (settings.twl.forwarder) {
-								settings.twl.launchslot1 = true;
-								// if(matching_files.size() == 0){
-									rom = fcfiles.at(cursorPosition).c_str();
-								// }else {
-							// 	rom = matching_files.at(cursorPosition).c_str();
-							// }
-							} else {
-								settings.twl.launchslot1 = false;
-								// if(matching_files.size() == 0){
-									rom = files.at(cursorPosition).c_str();
-								// }else {
-								// 	rom = matching_files.at(cursorPosition).c_str();
-								// }
-								sav = ReplaceAll(rom, ".nds", ".sav");
-							}
-							if (logEnabled)	LogFM("Main", "Switching to NTR/TWL-mode");
-							applaunchon = true;
-						}
 						wood_ndsiconscaletimer = 0;
 					} else if(hDown & KEY_L){
 						if ((size_t)pagenum != 0 && file_count <= (size_t)0-pagenum*20) {
@@ -3313,26 +3247,8 @@ int main()
 								menu_ctrlset = CTRL_SET_GAMESEL;
 								updatetopscreen = true;
 								break;
-							case 1:
-								if (!is3DSX) {
-									settings.twl.launchslot1 = true;
-									settings.twl.forwarder = false;
-									if (logEnabled)	LogFM("Main", "Switching to NTR/TWL-mode");
-									applaunchon = true;
-								}
-								break;
-							case 2:
-								if (!is3DSX) {
-									gbarunnervalue = 1;
-									settings.ui.romfolder = "_nds";									
-									rom = "GBARunner2.nds";
-									if (settings.twl.forwarder)
-										settings.twl.launchslot1 = true;
-									else
-										settings.twl.launchslot1 = false;
-									if (logEnabled)	LogFM("Main", "Switching to NTR/TWL-mode");
-									applaunchon = true;
-								}
+							case 1:								
+							case 2:								
 								break;
 						}
 					} else if (hDown & KEY_RIGHT) {
@@ -3368,28 +3284,7 @@ int main()
 						bannertextloaded = false;
 						updatetopscreen = true;
 					}
-					if(hDown & KEY_A){
-						if (!is3DSX) {
-							if (settings.twl.forwarder) {
-								settings.twl.launchslot1 = true;
-								// if(matching_files.size() == 0){
-									rom = fcfiles.at(cursorPosition).c_str();
-								// }else {
-							// 	rom = matching_files.at(cursorPosition).c_str();
-							// }
-							} else {
-								settings.twl.launchslot1 = false;
-								// if(matching_files.size() == 0){
-									rom = files.at(cursorPosition).c_str();
-								// }else {
-								// 	rom = matching_files.at(cursorPosition).c_str();
-								// }
-								sav = ReplaceAll(rom, ".nds", ".sav");
-							}
-							if (logEnabled)	LogFM("Main", "Switching to NTR/TWL-mode");
-							applaunchon = true;
-						}
-					} else if(hDown & KEY_DOWN){
+					if(hDown & KEY_DOWN){
 						cursorPosition++;
 						if (cursorPosition == filenum) {
 							filenameYmovepos = 0;
@@ -3593,7 +3488,7 @@ int main()
 							// updatebotscreen = true;
 						}
 					} else if (menuaction_launch) { menuaction_launch = false;	// Don't run the action again 'til A is pressed again
-						if (!is3DSX || cursorPosition == -2) {
+						if (cursorPosition == -2) {
 							bool playlaunchsound = true;
 							if (titleboxXmovetimer == 0) {
 								if(cursorPosition == -2) {
@@ -3700,28 +3595,12 @@ int main()
 								}
 							}else if (touch.px >= 23 && touch.px <= 155 && touch.py >= 71 && touch.py <= 105){ // Start GBARunner2 button
 								startmenu_cursorPosition = 2;
-								if (!is3DSX) {
-									gbarunnervalue = 1;
-									settings.ui.romfolder = "_nds";
-									rom = "GBARunner2.nds";
-									if (settings.twl.forwarder) {
-										settings.twl.launchslot1 = true;
-									} else {
-										settings.twl.launchslot1 = false;
-									}
-									fadeout = true;
+								if (!playwrongsounddone) {
 									if (dspfirmfound) {
-										bgm_menu->stop();
-										sfx_launch->play();
+										sfx_wrong->stop();
+										sfx_wrong->play();
 									}
-								} else {
-									if (!playwrongsounddone) {
-										if (dspfirmfound) {
-											sfx_wrong->stop();
-											sfx_wrong->play();
-										}
-										playwrongsounddone = true;
-									}
+									playwrongsounddone = true;
 								}
 							}else if (touch.px >= 161 && touch.px <= 293 && touch.py >= 71 && touch.py <= 105){ // Top border button
 								startmenu_cursorPosition = 3;
@@ -3808,28 +3687,12 @@ int main()
 									}
 									break;
 								case 2:
-									if (!is3DSX) {
-										gbarunnervalue = 1;
-										settings.ui.romfolder = "_nds";
-										rom = "GBARunner2.nds";
-										if (settings.twl.forwarder) {
-											settings.twl.launchslot1 = true;
-										} else {
-											settings.twl.launchslot1 = false;
-										}
-										fadeout = true;
+									if (!playwrongsounddone) {
 										if (dspfirmfound) {
-											bgm_menu->stop();
-											sfx_launch->play();
+											sfx_wrong->stop();
+											sfx_wrong->play();
 										}
-									} else {
-										if (!playwrongsounddone) {
-											if (dspfirmfound) {
-												sfx_wrong->stop();
-												sfx_wrong->play();
-											}
-											playwrongsounddone = true;
-										}
+										playwrongsounddone = true;
 									}
 									break;
 								case 3:
