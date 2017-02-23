@@ -52,6 +52,7 @@ script:
   - echo "Compiling TWLoader NAND Side"
   - make
   - cd ..
+  - echo "NAND Side ended"
   - echo "Compiling TWLoader GUI"
   - cd gui
   - make
